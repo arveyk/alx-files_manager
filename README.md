@@ -12,18 +12,20 @@ Concepts considered
 
 
 <h4><p>Objective is :</p>
-<p>to build a simple platform to upload and view files</p></h4>
---  User Authentication via a Token
---  List all files
---  Upload a new file
---  Change permission of a file
---  View a file
---  Generate thumbnails for images
+<p>To build a simple platform to upload and view files</p></h4>
+<p>--  User Authentication via a Token </p>
+<p>--  List all files</p>
+<p>--  Upload a new file</p>
+<p>--  Change permission of a file</p>
+<p>--  View a file</p>
+<p>--  Generate thumbnails for images</p>
 
-<p>Learning Objectives</p>
-Create an API with Express
-Authenticate a user
-Store data in MongoDB
-Store Temporary data in Redis
-Setup and use temporary worker
+<p><u>Learning Objectives</u></p>
+<ul>
+<li>Create an API with Express</li>
+<li>Authenticate a user</li>
+<li>Store data in MongoDB</li>
+<li>Store Temporary data in Redis</li>
+<li>Setup and use temporary worker</li>
+<ul>
 
