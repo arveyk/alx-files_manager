@@ -1,38 +1,51 @@
 const { MongoClient } = require('mongodb');
+
 class DBClient {
   constructor() {
-    this.host = process.env['DB_HOST'];
-    this.port = process.env['DB_PORT'];
-    this.database = process.env['DB_DATABASE'];
+    this.host = process.env['DB_HOST'] || 'localhost';
+    this.port = process.env['DB_PORT'] || 27017;
+    this.database = process.env['DB_DATABASE'] || 'file_manager';
     
-    if (this.host === undefined) {
-      this.host = 'localhost';
-    }
-    if (this.port === undefined) {
-      this.port = 27017;
-    }
-    if (this.database === undefined) {
-      this.database = 'files_manager';
-    }
-    const url = `mongodb:\/\/${this.host}:${this.port}`;
-    this.client = new MongoClient(url);
+    this.url = `mongodb://${this.host}:${this.port}`;
+    this.client = new MongoClient(this.url, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    this.connection = false;
+    this.connect().catch((error) => {
+      console.error(error);
+    });
+    this.db = null;
   }
-
-  isAlive() {
+  async connect() {
     try {
-     this.client.connect();
-     return true;
-    } catch {
+      await this.client.connect();
+      this.connection = true;
+      this.db = this.client.db(this.database);
+    } catch (error) {
+      console.log('connection failed');
+    }
+  }
+  isAlive() {
+    return this.connection;
+  }
+  async nbUsers() {
+    try {
+      const db = this.client.db(this.database);
+      const userCount = await db.collection('users').countDocuments();
+      return userCount;
+    } catch (error) {
       return false;
     }
   }
-  async nbUsers() {
-    db = this.client.db(this.database);
-    return db.collection(users).count();
-  }
   async nbFiles() {
-    db = this.client.db(this.database);
-    return db.collection(files).count();
+    try {
+      const db = this.client.db(this.database);
+      const fileCount = await db.collection('files').countDocuments();
+      return fileCount;
+    } catch (error) {
+      return false;
+    }
   }
 }
 

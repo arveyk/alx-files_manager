@@ -3,11 +3,8 @@ const routes = require('./routes/index.js');
 
 const app = express();
 const router = express.Router();
-let port = process.env['PORT'];
+const port = process.env['PORT'] || 5000;
 
-if (port === undefined) {
-  port = 5000;
-}
-
+app.use(express.json());
+app.use('/', routes);
 app.listen(port);
-app.use(routes);

@@ -2,17 +2,22 @@ const redisClient = require('../utils/redis.js');
 const dbClient = require('../utils/db.js');
 const express = require('express')
 
-const routes = express.Router();
+const router = express.Router();
 
-routes.get('/status', (request, response) => {
-  if (redisClient.isAlive && dbClient.isAlive) {
+function getStatus(request, response) {
+  if (redisClient.isAlive() === true && dbClient.isAlive() === true) {
     response.status(200).send({'redis': true, 'db': true});
   }
-});
-routes.get('/stats', (request, response) => {
-  const userCount = dbClient.nbUsers();
-  const fileCount = dbClient.nbFiles();
-  response.status(200).send({'users': userCount, 'files': fileCount});
-});
+}
+async function getStats(request, response) {
+  if (dbClient.isAlive() === true) {
+    const userCount = await dbClient.nbUsers();
+    const fileCount = await dbClient.nbFiles();
+    response.status(200).send({'users': userCount, 'files': fileCount});
+  }
+}
 
-module.exports = routes;
+module.exports = {
+  getStatus,
+  getStats
+};

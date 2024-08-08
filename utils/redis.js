@@ -1,11 +1,11 @@
 //import { createClient } from 'redis';
 //import { promisify } from 'util';
-const createClient = require('redis').createClient;
-const promisify = require('util').promisify;
+//const util = require('util');
+const redis = require('redis');
 
 class RedisClient {
   constructor(){
-    this.client = createClient();
+    this.client = redis.createClient();
     this.client.connect().catch('error', (error) => {
       console.error(error);
     });
