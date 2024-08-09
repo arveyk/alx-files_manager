@@ -2,10 +2,10 @@ const { MongoClient } = require('mongodb');
 
 class DBClient {
   constructor() {
-    this.host = process.env['DB_HOST'] || 'localhost';
-    this.port = process.env['DB_PORT'] || 27017;
-    this.database = process.env['DB_DATABASE'] || 'file_manager';
-    
+    this.host = process.env.DB_HOST || 'localhost';
+    this.port = process.env.DB_PORT || 27017;
+    this.database = process.env.DB_DATABASE || 'file_manager';
+
     this.url = `mongodb://${this.host}:${this.port}`;
     this.client = new MongoClient(this.url, {
       useNewUrlParser: true,
@@ -17,6 +17,7 @@ class DBClient {
     });
     this.db = null;
   }
+
   async connect() {
     try {
       await this.client.connect();
@@ -26,9 +27,11 @@ class DBClient {
       console.log('connection failed');
     }
   }
+
   isAlive() {
     return this.connection;
   }
+
   async nbUsers() {
     try {
       const db = this.client.db(this.database);
@@ -38,6 +41,7 @@ class DBClient {
       return false;
     }
   }
+
   async nbFiles() {
     try {
       const db = this.client.db(this.database);
