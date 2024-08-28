@@ -1,73 +1,67 @@
-const express = require('express');
-const dbClient = require('../utils/db.js');
 const crypto = require('crypto');
-
-const userRouter = express.Router();
+const dbClient = require('../utils/db');
+const redisClient = require('../utils/redis');
+const ObjectId = require('mongodb').ObjectId;
 
 function postNew(request, response) {
   const { email, password } = request.body;
   if (!email) {
     response.status(400).send({'error': 'Missing email'});
-  }
-  if (!password) {
+  } else if (!password) {
     response.status(400).send({'error': 'Missing password'});
-  }
-  if (dbClient.isAlive) {
-    try {
-      const users = dbClient.db.collection('users');
-      (async () => {
-        const generator = crypto.createHash('sha1');
-        let hashPwd = generator.update(password, 'utf-8').digest('hex');
-        const stat = await users.findOne({ email: email });
-	if (stat) {
-	  console.error(stat);
-	  response.status(400).send({'error': 'Already exists'});
-	} else {
-          const result = await dbClient.db.collection('users').insertOne(
-            {email: email},
-            {password: hashPwd}
-          );
-          response.status(201).send({
-            'id': result.insertedId,
-            'email': email
-	   });
-	}
-      })();
-    } catch (error) {
-      console.log(error);
-      response.status(500).send({'error': 'somethings off'});
-    }
-  }
-  //const generator = crypto.createHash('sha1');
-  //let hashPwd = generator.update(password, 'utf-8').digest('hex');
-  /*
-   * try {
+  } else {
     (async () => {
-      const result = await dbClient.db.collection('users').insertOne(
-        {email: email},
-        {password: hashPwd}
-      );
-      response.status(201).send({
-        'id': result.insertedId,
-        'email': email
-      });
+      try {
+        const user = await dbClient.userCollection.findOne({email: email});
+        if (user) {
+          response.status(400).send({'error': 'Already exist'});
+        } else {
+          const shaJen = crypto.createHash('sha1');
+          shaJen.update(password);
+          const pwdHash = shaJen.digest('hex');
+          const newUser = await dbClient.userCollection.insertOne({
+            email: email,
+            password: pwdHash
+          });
+          response.status(201).send({'email': email, 'id': newUser.insertedId});
+        }
+      } catch (err) {
+        console.log('db userCollection error', err);
+      }
     })();
-  } catch (error) {
-    response.status(500)
   }
-  */
 }
 
 function getMe(request, response) {
-  const token = request.header.X-Token;
-  const user_id = redisClient.get(token);
-  const collection = dbClient.db.collection('users');
-  
-  const user = collection.findOne({insertedId: user_id});
-  if (!user) {
-    response.status(401).send({'error': 'Unauthorized'});
+  const xtoken = request.headers['x-token'];
+  if (!xtoken) {
+    response.status(401).send({'error': 'X-Token missing'});
+  } else {
+    (async () => {
+      try{
+	const key = `auth_${xtoken}`;
+	console.log(key);
+        const userId = await redisClient.get(key);
+	const user = await dbClient.userCollection.findOne({
+	  _id: ObjectId(userId)
+	});
+        console.log(user);
+	if (!user) {
+	  response.status(401).send({'error': 'Unauthorized'});
+	} else {
+	  response.status(200).send({
+	    email: user.email,
+	    id: user._id
+	  });
+	}
+      } catch(error) {
+        console.log(error);
+      }
+    })();
   }
-  response.send({'id': user._id, 'email': user.email});
 }
 
-module.exports = { postNew, getMe };
+module.exports = {
+  getMe,
+  postNew
+};
